@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "Maison Étoile",
+    "slug": "maison-etoile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "maisonetoile",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.maisonetoile.shop"
+    },
+    "android": {
+      "package": "com.maisonetoile.shop"
+    }
+  }
+}
