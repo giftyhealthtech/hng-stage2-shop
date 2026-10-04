@@ -133,6 +133,20 @@ The product admin page at [admin.html](admin.html) lets an authorized administra
 
 The database policies restrict product writes and product-image uploads/deletes to UUIDs in `public.admin_users`. The `product-images` bucket is public so storefront visitors can see product photos; only authorized administrators can manage its files. The frontend must use only the Supabase publishable/anon key, never the service-role key.
 
+### Mobile app and shared cart
+
+The Expo app lives in [mobile/](mobile/). It uses the same Supabase Auth project, product table, `cart_items` table, cart RPCs, and Realtime publication as the website.
+
+1. Run [supabase/shared-cart.sql](supabase/shared-cart.sql) in the Supabase SQL editor after `products-table.sql`.
+2. Copy `mobile/.env.example` to `mobile/.env.local` and set `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY` to the same public values used by the website.
+3. Add `maisonetoile://auth/callback` to Supabase Authentication → URL Configuration → Redirect URLs. Google’s OAuth callback remains the Supabase callback URL already configured for website sign-in.
+4. Install Node.js 20.19+ and dependencies, then run `cd mobile && npm install && npx expo start`.
+5. For Google login on a physical phone, build/install a development build so the `maisonetoile` deep link scheme is registered. Expo Go does not register this app’s custom scheme. Use EAS Build or a locally configured Android/iOS SDK.
+
+Website guest carts remain in that browser until sign-in, when their items are merged into the user’s Supabase cart. Mobile guest carts are stored on that device and merged similarly. Signed-in cart changes are stored per-user and broadcast over Supabase Realtime; when a mobile app resumes, it fetches the current cart again. Quantity is capped at 20 per product/size line.
+
+Test on a physical phone: sign in with the same Google account used on the website, add a product on the website and verify it appears in the foreground app without refreshing; change quantity or remove it in the app and verify the website updates; then background and resume the app to check reconnection. The development environment cannot emulate your physical device, so this device verification must be completed locally.
+
 ### Supabase browser configuration
 
 For local development, put `SUPABASE_URL` and `SUPABASE_ANON_KEY` in the root `.env` file, then start the app with `node server.js`. The server reads `.env` locally and dynamically serves only those two browser-safe settings through `js/config.js`; it does not serve `.env` or other project files. It rejects service-role/secret keys. The `.env.example` file is a reference template.

@@ -14,6 +14,7 @@ const supabaseConfig = {
 };
 
 let supabaseClient;
+let cartRealtimeChannel;
 
 function getSupabaseClient() {
   if (!supabaseConfig.enabled || !window.supabase) {
@@ -72,6 +73,122 @@ async function signOutFromSupabase() {
   }
 
   return client.auth.signOut();
+}
+
+function normalizeCartRows(rows) {
+  return (rows || []).map((item) => ({
+    productId: item.product_id,
+    size: item.size,
+    quantity: Number(item.quantity)
+  }));
+}
+
+async function fetchUserCart() {
+  const client = getSupabaseClient();
+  if (!client) throw new Error('Supabase is not configured.');
+
+  const { data: sessionData, error: sessionError } = await client.auth.getSession();
+  if (sessionError) throw sessionError;
+  const userId = sessionData.session?.user.id;
+  if (!userId) throw new Error('Sign in to load your shared cart.');
+
+  const { data, error } = await client
+    .from('cart_items')
+    .select('product_id, size, quantity')
+    .eq('user_id', userId)
+    .order('updated_at', { ascending: true });
+
+  if (error) throw error;
+  return normalizeCartRows(data);
+}
+
+async function addUserCartItem(productId, size, quantity = 1) {
+  const client = getSupabaseClient();
+  if (!client) throw new Error('Supabase is not configured.');
+
+  const { data, error } = await client.rpc('cart_add_item', {
+    p_product_id: productId,
+    p_size: size,
+    p_quantity: quantity
+  });
+  if (error) throw error;
+  return normalizeCartRows(data);
+}
+
+async function setUserCartQuantity(productId, size, quantity) {
+  const client = getSupabaseClient();
+  if (!client) throw new Error('Supabase is not configured.');
+
+  const { data, error } = await client.rpc('cart_set_quantity', {
+    p_product_id: productId,
+    p_size: size,
+    p_quantity: quantity
+  });
+  if (error) throw error;
+  return normalizeCartRows(data);
+}
+
+async function mergeGuestCart(items) {
+  if (!items.length) return fetchUserCart();
+
+  const client = getSupabaseClient();
+  if (!client) throw new Error('Supabase is not configured.');
+
+  const { error } = await client.rpc('cart_merge_guest_items', { p_items: items });
+  if (error) throw error;
+  return fetchUserCart();
+}
+
+async function clearUserCart() {
+  const client = getSupabaseClient();
+  if (!client) throw new Error('Supabase is not configured.');
+
+  const { data: sessionData, error: sessionError } = await client.auth.getSession();
+  if (sessionError) throw sessionError;
+  const userId = sessionData.session?.user.id;
+  if (!userId) throw new Error('Sign in to update your shared cart.');
+
+  const { error } = await client.from('cart_items').delete().eq('user_id', userId);
+  if (error) throw error;
+}
+
+function watchUserCart(userId, onCartChanged) {
+  const client = getSupabaseClient();
+  if (!client) return;
+
+  if (cartRealtimeChannel) {
+    client.removeChannel(cartRealtimeChannel);
+    cartRealtimeChannel = null;
+  }
+
+  cartRealtimeChannel = client
+    .channel(`cart-items-${userId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'cart_items',
+        filter: `user_id=eq.${userId}`
+      },
+      () => {
+        fetchUserCart()
+          .then(onCartChanged)
+          .catch((error) => console.error('Could not refresh shared cart:', error));
+      }
+    )
+    .subscribe((status, error) => {
+      if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        console.error('Shared cart realtime subscription failed:', error || status);
+      }
+    });
+}
+
+function stopWatchingUserCart() {
+  const client = getSupabaseClient();
+  if (!client || !cartRealtimeChannel) return;
+  client.removeChannel(cartRealtimeChannel);
+  cartRealtimeChannel = null;
 }
 
 function normalizeProduct(product) {
@@ -149,5 +266,12 @@ window.signInWithGoogle = signInWithGoogle;
 window.signInAdminWithGoogle = signInAdminWithGoogle;
 window.getCurrentUser = getCurrentUser;
 window.signOutFromSupabase = signOutFromSupabase;
+window.fetchUserCart = fetchUserCart;
+window.addUserCartItem = addUserCartItem;
+window.setUserCartQuantity = setUserCartQuantity;
+window.mergeGuestCart = mergeGuestCart;
+window.clearUserCart = clearUserCart;
+window.watchUserCart = watchUserCart;
+window.stopWatchingUserCart = stopWatchingUserCart;
 window.fetchProductsFromSupabase = fetchProductsFromSupabase;
 window.saveOrderToSupabase = saveOrderToSupabase;

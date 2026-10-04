@@ -1,5 +1,19 @@
 const STORAGE_KEY = 'maisonEtoileCart';
 let currentProducts = [...sampleProducts];
+let cart = readGuestCart();
+let cartUserId = null;
+let cartSyncInitializing = false;
+
+function readGuestCart() {
+  try {
+    const savedCart = localStorage.getItem(STORAGE_KEY);
+    const parsedCart = savedCart ? JSON.parse(savedCart) : [];
+    return Array.isArray(parsedCart) ? parsedCart : [];
+  } catch (error) {
+    console.error('Could not read the saved guest cart:', error);
+    return [];
+  }
+}
 
 function formatCurrency(value) {
   return new Intl.NumberFormat('en-US', {
@@ -37,12 +51,87 @@ function showToast(message) {
 }
 
 function getCart() {
-  const savedCart = localStorage.getItem(STORAGE_KEY);
-  return savedCart ? JSON.parse(savedCart) : [];
+  return cart;
 }
 
-function saveCart(cart) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
+function saveGuestCart(items) {
+  cart = items;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  updateCartBadge();
+}
+
+function renderCurrentCart() {
+  updateCartBadge();
+  if (document.body.dataset.page === 'cart') {
+    renderCartPage();
+  }
+  if (document.body.dataset.page === 'checkout') {
+    renderCheckoutPage();
+  }
+}
+
+async function activateAccountCart(user) {
+  if (cartSyncInitializing || user.id === cartUserId) return;
+  cartSyncInitializing = true;
+
+  try {
+    const guestCart = cartUserId === null ? readGuestCart() : [];
+    let accountCart;
+    if (guestCart.length) {
+      accountCart = await mergeGuestCart(guestCart);
+      localStorage.removeItem(STORAGE_KEY);
+    } else {
+      accountCart = await fetchUserCart();
+    }
+
+    cartUserId = user.id;
+    cart = accountCart;
+    watchUserCart(user.id, (updatedCart) => {
+      if (cartUserId !== user.id) return;
+      cart = updatedCart;
+      renderCurrentCart();
+    });
+    renderCurrentCart();
+    if (guestCart.length) {
+      showToast('Your guest cart was merged with your account');
+    }
+  } catch (error) {
+    console.error('Could not initialize shared cart:', error);
+    showToast('Shared cart setup is unavailable. Your guest cart is unchanged.');
+  } finally {
+    cartSyncInitializing = false;
+  }
+}
+
+function deactivateAccountCart() {
+  stopWatchingUserCart();
+  cartUserId = null;
+  cart = readGuestCart();
+  renderCurrentCart();
+}
+
+async function initializeCartSync() {
+  const client = getSupabaseClient();
+  if (!client) return;
+
+  const { data, error } = await client.auth.getSession();
+  if (error) {
+    console.error('Could not read the signed-in session for cart sync:', error);
+    return;
+  }
+  if (data.session?.user) {
+    await activateAccountCart(data.session.user);
+  }
+
+  client.auth.onAuthStateChange((_event, session) => {
+    window.setTimeout(() => {
+      if (session?.user) {
+        activateAccountCart(session.user);
+      } else {
+        deactivateAccountCart();
+      }
+    }, 0);
+  });
 }
 
 function getProductById(productId) {
@@ -50,7 +139,7 @@ function getProductById(productId) {
 }
 
 function getCartItemCount() {
-  return getCart().reduce((total, item) => total + item.quantity, 0);
+  return cart.reduce((total, item) => total + item.quantity, 0);
 }
 
 function updateCartBadge() {
@@ -59,69 +148,118 @@ function updateCartBadge() {
   cartCount.textContent = getCartItemCount();
 }
 
-function addToCart(productId, selectedSize = 'One Size') {
-  const cart = getCart();
+async function addToCart(productId, selectedSize = 'One Size') {
   const product = getProductById(productId);
   const existingItem = cart.find(
     (item) => String(item.productId) === String(productId) && item.size === selectedSize
   );
 
-  if (existingItem) {
-    existingItem.quantity += 1;
-  } else {
-    cart.push({
-      productId: product ? product.id : productId,
-      size: selectedSize,
-      quantity: 1
-    });
+  if (existingItem && existingItem.quantity >= 20) {
+    showToast('A cart item cannot exceed quantity 20');
+    return;
   }
 
-  saveCart(cart);
-  updateCartBadge();
-  if (product) {
-    showToast(`${product.name} added to cart`);
-  }
-}
-
-function removeFromCart(productId, size = null) {
-  const cart = getCart().filter((item) => {
-    if (size) {
-      return !(String(item.productId) === String(productId) && item.size === size);
+  const resolvedProductId = product ? product.id : productId;
+  if (cartUserId) {
+    try {
+      const updatedRows = await addUserCartItem(resolvedProductId, selectedSize, 1);
+      const updatedItem = updatedRows[0];
+      const nextCart = cart.filter(
+        (item) => !(String(item.productId) === String(resolvedProductId) && item.size === selectedSize)
+      );
+      cart = updatedItem ? [...nextCart, updatedItem] : nextCart;
+      renderCurrentCart();
+    } catch (error) {
+      console.error('Could not add item to shared cart:', error);
+      showToast(error.message || 'Could not update your shared cart');
+      return;
     }
-    return String(item.productId) !== String(productId);
-  });
-
-  saveCart(cart);
-  updateCartBadge();
-  showToast('Item removed from cart');
-
-  if (document.body.dataset.page === 'cart') {
-    renderCartPage();
+  } else {
+    const nextCart = [...cart];
+    if (existingItem) {
+      existingItem.quantity += 1;
+    } else {
+      nextCart.push({ productId: resolvedProductId, size: selectedSize, quantity: 1 });
+    }
+    saveGuestCart(nextCart);
   }
+
+  if (product) showToast(`${product.name} added to cart`);
 }
 
-function updateQuantity(productId, size, change) {
-  const cart = getCart();
+async function removeFromCart(productId, size = null) {
+  const itemsToRemove = cart.filter((item) => {
+    if (size) {
+      return String(item.productId) === String(productId) && item.size === size;
+    }
+    return String(item.productId) === String(productId);
+  });
+  if (cartUserId) {
+    try {
+      await Promise.all(itemsToRemove.map((item) => setUserCartQuantity(item.productId, item.size, 0)));
+      cart = cart.filter((item) => !itemsToRemove.includes(item));
+      renderCurrentCart();
+    } catch (error) {
+      console.error('Could not remove item from shared cart:', error);
+      showToast(error.message || 'Could not update your shared cart');
+      return;
+    }
+  } else {
+    saveGuestCart(cart.filter((item) => {
+      if (size) {
+        return !(String(item.productId) === String(productId) && item.size === size);
+      }
+      return String(item.productId) !== String(productId);
+    }));
+  }
+
+  showToast('Item removed from cart');
+}
+
+async function updateQuantity(productId, size, change) {
   const item = cart.find(
     (entry) => String(entry.productId) === String(productId) && entry.size === size
   );
 
   if (!item) return;
 
-  item.quantity += change;
+  const nextQuantity = item.quantity + change;
 
-  if (item.quantity <= 0) {
-    removeFromCart(productId, size);
+  if (nextQuantity <= 0) {
+    await removeFromCart(productId, size);
+    return;
+  }
+  if (nextQuantity > 20) {
+    showToast('A cart item cannot exceed quantity 20');
     return;
   }
 
-  saveCart(cart);
-  updateCartBadge();
-  showToast('Cart updated');
-
-  if (document.body.dataset.page === 'cart') {
-    renderCartPage();
+  if (cartUserId) {
+    try {
+      const updatedRows = await setUserCartQuantity(productId, size, nextQuantity);
+      if (updatedRows[0]) {
+        cart = cart.map((entry) =>
+          String(entry.productId) === String(productId) && entry.size === size
+            ? updatedRows[0]
+            : entry
+        );
+      } else {
+        cart = cart.filter(
+          (entry) => !(String(entry.productId) === String(productId) && entry.size === size)
+        );
+      }
+      renderCurrentCart();
+    } catch (error) {
+      console.error('Could not update shared cart quantity:', error);
+      showToast(error.message || 'Could not update your shared cart');
+      return;
+    }
+  } else {
+    item.quantity = nextQuantity;
+    saveGuestCart(cart);
   }
+
+  showToast('Cart updated');
 }
 
 function getCartTotal() {
@@ -465,12 +603,13 @@ function renderCheckoutPage() {
 
   const form = document.querySelector('#checkout-form');
   if (!form) return;
+  if (form.dataset.submitListenerAttached === 'true') return;
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
 
-    const cart = getCart();
-    if (!cart.length) {
+    const orderCart = getCart();
+    if (!orderCart.length) {
       showToast('Your cart is empty');
       return;
     }
@@ -485,7 +624,7 @@ function renderCheckoutPage() {
       postalCode: formValues.get('postalCode').trim(),
       country: formValues.get('country').trim()
     };
-    const items = cart.map((item) => ({
+    const items = orderCart.map((item) => ({
       productId: item.productId,
       size: item.size,
       quantity: item.quantity
@@ -506,6 +645,14 @@ function renderCheckoutPage() {
       localStorage.setItem('lastOrderId', result.data?.order_id || '');
       localStorage.setItem('lastOrderPersisted', String(Boolean(result.persisted)));
       localStorage.removeItem(STORAGE_KEY);
+      cart = [];
+      if (cartUserId) {
+        try {
+          await clearUserCart();
+        } catch (clearError) {
+          console.error('Order was saved but the shared cart could not be cleared:', clearError);
+        }
+      }
       updateCartBadge();
       window.location.href = 'success.html';
     } catch (error) {
@@ -514,6 +661,7 @@ function renderCheckoutPage() {
       submitButton.disabled = false;
     }
   });
+  form.dataset.submitListenerAttached = 'true';
 }
 
 function renderSuccessPage() {
@@ -588,8 +736,9 @@ async function initLoginPage() {
 }
 
 async function initPage() {
-  updateCartBadge();
   await loadProducts();
+  await initializeCartSync();
+  updateCartBadge();
 
   const page = document.body.dataset.page;
 
