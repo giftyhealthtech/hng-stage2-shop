@@ -137,7 +137,7 @@ The database policies restrict product writes and product-image uploads/deletes 
 
 For local development, put `SUPABASE_URL` and `SUPABASE_ANON_KEY` in the root `.env` file, then start the app with `node server.js`. The server reads `.env` locally and dynamically serves only those two browser-safe settings through `js/config.js`; it does not serve `.env` or other project files. It rejects service-role/secret keys. The `.env.example` file is a reference template.
 
-For Vercel deployment, add `SUPABASE_URL` and `SUPABASE_ANON_KEY` as Vercel project environment variables for the Production (and Preview, if needed) environments. `vercel.json` rewrites the browser's `/js/config.js` request to [api/config.js](api/config.js), which exposes only these public client settings and rejects secret/service-role keys. The root `.env` remains local and must not be uploaded or committed.
+For Vercel deployment, add `SUPABASE_URL` and `SUPABASE_ANON_KEY` as Vercel project environment variables for the Production (and Preview, if needed) environments. Pages load the runtime config from `/api/config`, implemented in [api/config.js](api/config.js), which exposes only these public client settings and rejects secret/service-role keys. The root `.env` remains local and must not be uploaded or committed.
 
 The browser necessarily receives the Supabase URL and publishable/anon key. These are public client credentials: database access must remain protected by row-level security and the restricted `place_order` database function. Never put a service-role key in frontend code or `.env` used by this server.
 

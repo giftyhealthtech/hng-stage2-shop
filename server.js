@@ -17,7 +17,6 @@ const HTML_PAGES = new Set([
 const PUBLIC_FILES = new Set([
   ...Array.from(HTML_PAGES, (file) => `/${file}`),
   '/css/styles.css',
-  '/js/config.js',
   '/js/admin.js',
   '/js/data.js',
   '/js/main.js',
@@ -118,7 +117,7 @@ const server = http.createServer((request, response) => {
 
   if (pathname === '/') pathname = '/index.html';
 
-  if (pathname === '/js/config.js') {
+  if (pathname === '/api/config') {
     const body = [
       `window.SUPABASE_URL = window.SUPABASE_URL || ${JSON.stringify(supabaseUrl)};`,
       `window.SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || ${JSON.stringify(supabaseAnonKey)};`
