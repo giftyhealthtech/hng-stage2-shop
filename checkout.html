@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Checkout | Maison Étoile</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body data-page="checkout">
+    <header class="topbar">
+      <div class="container navbar">
+        <a href="index.html" class="brand">Maison Étoile</a>
+        <nav class="nav-links">
+          <a href="index.html">Home</a>
+          <a href="shop.html">Shop</a>
+          <a href="login.html">Login</a>
+        </nav>
+        <div class="nav-actions">
+          <a class="cart-pill" href="cart.html">Cart <span class="cart-count">0</span></a>
+        </div>
+      </div>
+    </header>
+
+    <main class="checkout-page">
+      <div class="container cart-layout">
+        <section class="checkout-form">
+          <h3>Delivery details</h3>
+          <form id="checkout-form">
+            <div class="form-row">
+              <label>
+                First name
+                <input type="text" name="firstName" placeholder="Your first name" required />
+              </label>
+              <label>
+                Last name
+                <input type="text" name="lastName" placeholder="Your last name" required />
+              </label>
+            </div>
+
+            <label>
+              Email
+              <input type="email" name="email" placeholder="you@example.com" required />
+            </label>
+
+            <label>
+              Address
+              <input type="text" name="address" placeholder="Street address" required />
+            </label>
+
+            <div class="form-row">
+              <label>
+                City
+                <input type="text" name="city" placeholder="City" required />
+              </label>
+              <label>
+                Postal code
+                <input type="text" name="postalCode" placeholder="Postal code" required />
+              </label>
+            </div>
+
+            <label>
+              Country
+              <select name="country">
+                <option>United States</option>
+                <option>United Kingdom</option>
+                <option>Canada</option>
+                <option>Germany</option>
+              </select>
+            </label>
+
+            <button class="btn" type="submit">Place order</button>
+          </form>
+        </section>
+
+        <aside id="checkout-summary" class="summary-panel"></aside>
+      </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>

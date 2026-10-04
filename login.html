@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login | Maison Étoile</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body data-page="login">
+    <header class="topbar">
+      <div class="container navbar">
+        <a href="index.html" class="brand">Maison Étoile</a>
+        <nav class="nav-links">
+          <a href="index.html">Home</a>
+          <a href="shop.html">Shop</a>
+          <a href="login.html">Login</a>
+        </nav>
+        <div class="nav-actions">
+          <a class="cart-pill" href="cart.html">Cart <span class="cart-count">0</span></a>
+        </div>
+      </div>
+    </header>
+
+    <main class="auth-page">
+      <div class="container">
+        <div class="auth-box">
+          <h3 id="auth-title">Sign in or create an account</h3>
+          <p id="auth-message" role="status" aria-live="polite">Use your Google account to continue.</p>
+          <div id="auth-actions">
+            <button class="btn" id="google-sign-in" type="button">Continue with Google</button>
+          </div>
+          <p><a href="admin.html">Store admin</a></p>
+        </div>
+      </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>

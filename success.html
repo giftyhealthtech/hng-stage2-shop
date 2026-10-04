@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Order Success | Maison Étoile</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body data-page="success">
+    <header class="topbar">
+      <div class="container navbar">
+        <a href="index.html" class="brand">Maison Étoile</a>
+        <nav class="nav-links">
+          <a href="index.html">Home</a>
+          <a href="shop.html">Shop</a>
+          <a href="login.html">Login</a>
+        </nav>
+        <div class="nav-actions">
+          <a class="cart-pill" href="cart.html">Cart <span class="cart-count">0</span></a>
+        </div>
+      </div>
+    </header>
+
+    <main class="success-page">
+      <div class="container">
+        <div class="success-box">
+          <span class="eyebrow">Thank you</span>
+          <h3>Your order has been received</h3>
+          <p id="success-status">Payment has not been collected yet.</p>
+
+          <div class="success-code" id="success-order-id">Order reference</div>
+
+          <p>Order total: <strong id="success-total">$0.00</strong></p>
+          <a class="btn" href="shop.html">Continue shopping</a>
+        </div>
+      </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>

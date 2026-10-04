@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Maison Étoile | Luxury Fashion</title>
+    <meta name="description" content="Minimal luxury fashion boutique for a small independent label." />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body data-page="home">
+    <header class="topbar">
+      <div class="container navbar">
+        <a href="index.html" class="brand">Maison Étoile</a>
+
+        <nav class="nav-links" aria-label="Main navigation">
+          <a href="index.html">Home</a>
+          <a href="shop.html">Shop</a>
+          <a href="login.html">Login</a>
+        </nav>
+
+        <div class="nav-actions">
+          <a class="cart-pill" href="cart.html" aria-label="View cart">
+            Cart
+            <span class="cart-count">0</span>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="container hero-inner">
+          <div>
+            <span class="eyebrow">Curated for modern rituals</span>
+            <h1>Quiet luxury, designed for everyday life.</h1>
+            <p class="lead">
+              Thoughtful silhouettes, tactile fabrics, and timeless essentials made for a slower, more intentional wardrobe.
+            </p>
+            <div class="hero-actions">
+              <a class="btn" href="shop.html">Shop the Collection</a>
+              <a class="link-btn" href="login.html">Account</a>
+            </div>
+            <div class="hero-meta">
+              <div class="meta-item">
+                <strong>Small-batch</strong>
+                <span>crafted pieces</span>
+              </div>
+              <div class="meta-item">
+                <strong>Free shipping</strong>
+                <span>over $200</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="hero-card">
+            <img src="https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=900&q=80" alt="Luxury fashion editorial portrait" />
+            <div class="feature-tag">New Arrivals</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <div class="section-heading">
+            <h2>Featured pieces</h2>
+            <p>Designed with simplicity, proportion, and an effortless sense of ease.</p>
+          </div>
+          <div id="featured-products" class="product-grid"></div>
+        </div>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>

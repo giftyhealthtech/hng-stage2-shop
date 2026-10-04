@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Store Admin | Maison Étoile</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body data-page="admin">
+    <header class="topbar">
+      <div class="container navbar">
+        <a href="index.html" class="brand">Maison Étoile</a>
+        <nav class="nav-links" aria-label="Admin navigation">
+          <a href="shop.html">View shop</a>
+          <a href="login.html">Account</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="admin-page">
+      <div class="container">
+        <section id="admin-login" class="auth-box admin-login">
+          <h1>Store admin</h1>
+          <p id="admin-login-message" role="status" aria-live="polite">
+            Sign in with the Google account authorized to manage this store.
+          </p>
+          <button class="btn admin-google-button" id="admin-google-sign-in" type="button">Continue with Google</button>
+          <p class="admin-auth-separator">Or sign in with email and password</p>
+          <form id="admin-login-form">
+            <label>
+              Email
+              <input type="email" name="email" autocomplete="username" required />
+            </label>
+            <label>
+              Password
+              <input type="password" name="password" autocomplete="current-password" required />
+            </label>
+            <button class="btn" type="submit">Sign in</button>
+          </form>
+          <button class="link-btn admin-login-sign-out" id="admin-login-sign-out" type="button" hidden>Sign out / change account</button>
+        </section>
+
+        <section id="admin-dashboard" hidden>
+          <div class="admin-heading">
+            <div>
+              <span class="eyebrow">Store management</span>
+              <h1>Products</h1>
+            </div>
+            <button class="link-btn" id="admin-sign-out" type="button">Sign out</button>
+          </div>
+
+          <p id="admin-status" class="admin-status" role="status" aria-live="polite"></p>
+
+          <div class="admin-layout">
+            <section class="admin-panel">
+              <h2 id="product-form-title">Add a product</h2>
+              <form id="product-form" class="admin-form">
+                <label>
+                  Product name
+                  <input type="text" name="name" maxlength="160" required />
+                </label>
+                <div class="form-row">
+                  <label>
+                    Price (USD)
+                    <input type="number" name="price" min="0" step="0.01" required />
+                  </label>
+                  <label>
+                    Category
+                    <input type="text" name="category" maxlength="80" required />
+                  </label>
+                </div>
+                <label>
+                  Description
+                  <textarea name="description" rows="4" maxlength="2000" required></textarea>
+                </label>
+                <label>
+                  Sizes (comma-separated)
+                  <input type="text" name="sizes" placeholder="XS, S, M, L" required />
+                </label>
+                <label>
+                  Product image
+                  <input type="file" name="imageFile" accept="image/*" />
+                </label>
+                <label>
+                  Or use an image URL
+                  <input type="url" name="imageUrl" placeholder="https://…" />
+                </label>
+                <p class="admin-help">Choose an upload or provide an image URL. Uploaded images go to the public product-images bucket.</p>
+                <div class="admin-form-actions">
+                  <button class="btn" type="submit" id="save-product">Add product</button>
+                  <button class="link-btn" type="button" id="cancel-edit" hidden>Cancel edit</button>
+                </div>
+              </form>
+            </section>
+
+            <section class="admin-panel">
+              <h2>Current products</h2>
+              <div id="admin-products" class="admin-products"></div>
+            </section>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/admin.js"></script>
+  </body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cart | Maison Étoile</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body data-page="cart">
+    <header class="topbar">
+      <div class="container navbar">
+        <a href="index.html" class="brand">Maison Étoile</a>
+        <nav class="nav-links">
+          <a href="index.html">Home</a>
+          <a href="shop.html">Shop</a>
+          <a href="login.html">Login</a>
+        </nav>
+        <div class="nav-actions">
+          <a class="cart-pill" href="cart.html">Cart <span class="cart-count">0</span></a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="page-header">
+        <div class="container">
+          <span class="eyebrow">Your selections</span>
+          <h1>Shopping Catalog</h1>
+        </div>
+      </section>
+
+      <section class="container cart-layout">
+        <div id="cart-items" class="cart-panel"></div>
+        <aside id="cart-summary" class="summary-panel"></aside>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>
