@@ -12,6 +12,11 @@
     },
     "android": {
       "package": "com.maisonetoile.shop"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "fc0d67ad-0985-4972-a7f6-fec78702ba69"
+      }
     }
   }
 }
