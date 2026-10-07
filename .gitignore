@@ -1,5 +1,8 @@
 .env
 .env.*
 !.env.example
+mobile/.env.local
+mobile/.expo/
+mobile/dist/
 venv_shop/
 node_modules/
